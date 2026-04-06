@@ -13,6 +13,7 @@ Use this skill when the user wants a bridge between WeRead and their note workfl
 - Captures a single book's page state and visible reading content into JSON
 - Exports Markdown files that are easy for Obsidian, Feishu bots, or OpenClaw to consume
 - Supports chat-friendly shortcuts for syncing by book title and appending polished reflections back into the matching Obsidian note
+- Uses a least-privilege default: visible DOM only, no browser storage dump, and Obsidian writes only through `obsidian-cli`
 
 ## Preconditions
 
@@ -92,11 +93,13 @@ This repository is structured as a self-contained skill repo.
 - Prefer using a real book URL captured from the shelf or copied from the browser instead of guessing a reader URL pattern.
 - For title-based sync, prefer exact title matches first; if matching is ambiguous, surface the top candidates before taking action.
 - The content capture is intentionally conservative: it records visible or scroll-loaded text from a single page flow so the downstream note system can summarize, annotate, and ask follow-up questions.
+- Do not collect cookies, browser storage, or unrelated local application config.
 - If WeRead changes its DOM, inspect the saved JSON first; the scripts already preserve raw page clues for follow-up repairs.
 
 ## Outputs
 
 - `output/weread/shelf.json`: bookshelf snapshot, candidate book links, storage hints, page diagnostics
+- `output/weread/shelf.json`: bookshelf snapshot and page diagnostics from visible DOM
 - `output/weread/books/*.json`: per-book metadata, visible content, notes/highlights candidates, diagnostics
 - `output/weread/reflections/*.json`: user-authored or polished reflections that should survive future exports
 - `output/obsidian/*.md`: Markdown notes ready for vault ingestion or LLM conversation

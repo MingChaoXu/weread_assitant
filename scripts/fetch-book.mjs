@@ -124,10 +124,6 @@ const PAGE_EXTRACTOR = String.raw`
     toc: tocLinks,
     notes: pickTextList(noteSelectors, 100),
     contentBlocks: extractParagraphs(),
-    globalKeys: Object.keys(window)
-      .filter((key) => /weread|book|reader|note|chapter/i.test(key))
-      .sort()
-      .slice(0, 200),
   };
 })()
 `;
@@ -172,7 +168,6 @@ async function main() {
           title: initial.title,
           url: initial.url,
           headings: initial.headings || [],
-          globalKeys: initial.globalKeys || [],
         },
         metadata: initial.metadata || {},
         toc: initial.toc || [],

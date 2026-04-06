@@ -7,9 +7,9 @@ The scripts in this skill produce stable local artifacts so other tools can cons
 Top-level fields:
 
 - `capturedAt`: ISO timestamp
-- `page`: page diagnostics, title, URL, storage, candidate global state
+- `page`: page diagnostics, title, URL, and body text snippet from the visible shelf page
 - `books`: de-duplicated shelf items with title, href, guessed book id, dataset attributes, and nearby text
-- `rawCandidates`: lower-confidence DOM matches kept for debugging
+- `rawCandidates`: lower-confidence DOM matches kept for debugging when `--debug-dom` is enabled
 
 ## `output/weread/books/<slug>.json`
 
@@ -17,7 +17,7 @@ Top-level fields:
 
 - `capturedAt`: ISO timestamp
 - `sourceUrl`: URL used for capture
-- `page`: page diagnostics and global-state hints
+- `page`: page diagnostics and visible page headings
 - `metadata`: title, subtitle, author, intro, cover, page headings
 - `toc`: chapter-like links or headings that look navigable
 - `notes`: note, highlight, bookmark, or review-like blocks visible in DOM

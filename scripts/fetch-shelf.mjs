@@ -6,12 +6,13 @@ const DEFAULT_URL = "https://weread.qq.com/web/shelf";
 const DEFAULT_OUTPUT = "output/weread/shelf.json";
 
 function parseArgs(argv) {
-  const args = { url: DEFAULT_URL, output: DEFAULT_OUTPUT, keepOpen: false };
+  const args = { url: DEFAULT_URL, output: DEFAULT_OUTPUT, keepOpen: false, debugDom: false };
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
     if (token === "--url") args.url = argv[index + 1];
     if (token === "--output") args.output = argv[index + 1];
     if (token === "--keep-open") args.keepOpen = true;
+    if (token === "--debug-dom") args.debugDom = true;
   }
   return args;
 }
@@ -25,18 +26,6 @@ const SHELF_EXTRACTOR = String.raw`
 (() => {
   const normalize = (value) => (value || "").replace(/\s+/g, " ").trim();
   const asArray = (value) => Array.from(value || []);
-  const storageToObject = (storage) => {
-    try {
-      const result = {};
-      for (let index = 0; index < storage.length; index += 1) {
-        const key = storage.key(index);
-        result[key] = storage.getItem(key);
-      }
-      return result;
-    } catch {
-      return {};
-    }
-  };
 
   const guessBookId = (href) => {
     if (!href) return null;
@@ -91,21 +80,12 @@ const SHELF_EXTRACTOR = String.raw`
     });
   }
 
-  const globalKeys = Object.keys(window)
-    .filter((key) => /weread|book|reader|shelf|note/i.test(key))
-    .sort();
-
   return {
     title: document.title,
     url: location.href,
     bodyTextSnippet: normalize(document.body?.innerText || "").slice(0, 2000),
     books,
     rawCandidates: bookCandidates.slice(0, 200),
-    storage: {
-      localStorage: storageToObject(window.localStorage),
-      sessionStorage: storageToObject(window.sessionStorage),
-    },
-    globalKeys,
   };
 })()
 `;
@@ -131,10 +111,12 @@ async function main() {
         capturedAt: new Date().toISOString(),
         page: {
           info: pageInfo,
-          ...extracted,
+          title: extracted.title,
+          url: extracted.url,
+          bodyTextSnippet: extracted.bodyTextSnippet,
         },
         books: extracted.books || [],
-        rawCandidates: extracted.rawCandidates || [],
+        ...(args.debugDom ? { rawCandidates: extracted.rawCandidates || [] } : {}),
       };
     },
     { keepOpen: args.keepOpen }

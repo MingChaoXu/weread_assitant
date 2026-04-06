@@ -10,6 +10,21 @@
 4. 生成适合 Obsidian 的 Markdown 笔记
 5. 通过 `obsidian-cli` 直接写入你的 Obsidian vault
 
+## Security Notes
+
+这个 skill 需要访问你本机已登录的微信读书网页，因此公开市场扫描工具有时会把它标成“可疑”。当前代码的默认行为已经收紧为：
+
+- 只抓取当前页面可见 DOM 和滚动后可见正文
+- 不读取 cookie、`localStorage`、`sessionStorage`
+- 不扫描本机 Obsidian 配置目录
+- 只通过 `obsidian-cli` 写入 Obsidian，不再走直接写 vault 的回退逻辑
+
+如果后续市场扫描仍然误报，最可能的原因是它依然会看到：
+
+- 需要连接本地 Chrome Debug 代理
+- 需要访问已登录网页内容
+- 需要调用本地命令行把笔记发布到 Obsidian
+
 ## 项目目标
 
 这个仓库不是通用爬虫，而是一个偏个人知识管理的桥接层：
@@ -172,6 +187,8 @@ python3 /Users/mcxu/.codex/skills/.system/skill-installer/scripts/install-skill-
 
 - `obsidian-cli` 可用
 - 默认 vault 为 `claw_notes`
+
+如果 `obsidian-cli` 没有正确配置，发布步骤会显式失败，而不是自动探测或改写你的本地 Obsidian 配置。
 
 ## 快速开始
 
