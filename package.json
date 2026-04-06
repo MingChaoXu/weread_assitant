@@ -1,0 +1,11 @@
+{
+  "name": "weread-assistant",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "weread:fetch-shelf": "node skills/weread-obsidian/scripts/fetch-shelf.mjs",
+    "weread:fetch-book": "node skills/weread-obsidian/scripts/fetch-book.mjs",
+    "weread:export-obsidian": "node skills/weread-obsidian/scripts/export-obsidian.mjs",
+    "weread:publish-obsidian": "node skills/weread-obsidian/scripts/publish-obsidian.mjs"
+  }
+}
