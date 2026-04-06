@@ -25,6 +25,8 @@
 - 需要访问已登录网页内容
 - 需要调用本地命令行把笔记发布到 Obsidian
 
+更完整的权限边界、数据流和误报说明见 [SECURITY.md](/Users/mcxu/workspace/projects/weread_assitant/SECURITY.md#L1)。
+
 ## 项目目标
 
 这个仓库不是通用爬虫，而是一个偏个人知识管理的桥接层：
