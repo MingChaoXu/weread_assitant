@@ -322,7 +322,7 @@ npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
 
 ### 4. GitHub 发布尚未完成
 
-当前目录起步时不是 git 仓库，而且本机 `gh auth status` 显示 GitHub token 已失效，因此自动推送还需要补齐认证。
+当前目录已经初始化为本地 git 仓库，但还没有配置远程仓库地址，因此推送前还需要补上目标 GitHub repo。
 
 ## 推荐下一步
 
