@@ -24,7 +24,7 @@ Use this skill when the user wants a bridge between WeRead and their note workfl
 1. Pull the bookshelf snapshot:
 
 ```bash
-npm run weread:fetch-shelf
+node scripts/fetch-shelf.mjs
 ```
 
 This writes `output/weread/shelf.json`.
@@ -32,7 +32,7 @@ This writes `output/weread/shelf.json`.
 2. Capture one book:
 
 ```bash
-npm run weread:fetch-book -- --book-url "https://weread.qq.com/..."
+node scripts/fetch-book.mjs --book-url "https://weread.qq.com/..."
 ```
 
 This writes `output/weread/books/<slug>.json`.
@@ -40,7 +40,7 @@ This writes `output/weread/books/<slug>.json`.
 3. Export Markdown for note-taking:
 
 ```bash
-npm run weread:export-obsidian -- --shelf output/weread/shelf.json --book output/weread/books/<slug>.json
+node scripts/export-obsidian.mjs --shelf output/weread/shelf.json --book output/weread/books/<slug>.json
 ```
 
 This writes Markdown under `output/obsidian/`.
@@ -48,10 +48,18 @@ This writes Markdown under `output/obsidian/`.
 4. Publish Markdown into Obsidian through `obsidian-cli`:
 
 ```bash
-npm run weread:publish-obsidian -- --dir output/obsidian
+node scripts/publish-obsidian.mjs --dir output/obsidian
 ```
 
 This writes notes into the default vault configured in `obsidian-cli`, or the vault passed with `--vault`.
+
+## Installability
+
+This skill is designed to be installed directly from the repository path `skills/weread-obsidian`.
+
+- The skill is self-contained under this directory.
+- Runtime commands should call files in `scripts/` directly.
+- The repo-root `package.json` only provides local developer aliases and is not required after installation.
 
 ## Operating guidance
 

@@ -90,6 +90,28 @@
     └── weread/
 ```
 
+## 作为 OpenClaw Skill 安装
+
+如果你的目标不是只在这个仓库里开发，而是让 OpenClaw 直接安装这个 skill，那么应该安装仓库里的这个子路径：
+
+- `skills/weread-obsidian`
+
+原因是这个目录已经包含了 skill 需要的核心内容：
+
+- `SKILL.md`
+- `scripts/`
+- `references/`
+- `agents/openai.yaml`
+
+安装后，skill 应直接调用：
+
+- `node scripts/fetch-shelf.mjs`
+- `node scripts/fetch-book.mjs`
+- `node scripts/export-obsidian.mjs`
+- `node scripts/publish-obsidian.mjs`
+
+而不是依赖仓库根目录的 `npm run`。根目录的 `package.json` 只是开发时的快捷方式，不是安装后运行的必要条件。
+
 ## 运行前提
 
 ### 必需条件

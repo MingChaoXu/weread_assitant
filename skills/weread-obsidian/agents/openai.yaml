@@ -1,0 +1,8 @@
+interface:
+  display_name: "WeRead Obsidian"
+  short_description: "Sync WeRead reading state and notes into Obsidian-ready files."
+  brand_color: "#2F6B5F"
+  default_prompt: "Use $weread-obsidian to sync my WeRead shelf or a specific book into Obsidian-ready notes."
+
+policy:
+  allow_implicit_invocation: true
