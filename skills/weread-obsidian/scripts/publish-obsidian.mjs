@@ -33,27 +33,37 @@ function parseArgs(argv) {
 
 async function collectMarkdownFiles(inputDir) {
   try {
-  const entries = await fs.readdir(inputDir, { withFileTypes: true });
-  const files = [];
+    const entries = await fs.readdir(inputDir, { withFileTypes: true });
+    const files = [];
 
-  for (const entry of entries) {
-    const fullPath = path.join(inputDir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await collectMarkdownFiles(fullPath)));
-      continue;
+    for (const entry of entries) {
+      const fullPath = path.join(inputDir, entry.name);
+      if (entry.isDirectory()) {
+        files.push(...(await collectMarkdownFiles(fullPath)));
+        continue;
+      }
+      if (entry.isFile() && entry.name.endsWith(".md")) {
+        files.push(fullPath);
+      }
     }
-    if (entry.isFile() && entry.name.endsWith(".md")) {
-      files.push(fullPath);
-    }
-  }
 
-  return files.sort();
+    return files.sort();
   } catch (error) {
     if (error && error.code === "ENOENT") {
       throw new Error(`Markdown directory not found: ${inputDir}. Run weread:export-obsidian first or pass --file.`);
     }
     throw error;
   }
+}
+
+function detectInputRoot(filePath) {
+  const normalized = path.resolve(filePath);
+  const marker = `${path.sep}output${path.sep}obsidian${path.sep}`;
+  const index = normalized.indexOf(marker);
+  if (index >= 0) {
+    return normalized.slice(0, index + marker.length - 1);
+  }
+  return path.dirname(normalized);
 }
 
 function printHelp() {
@@ -107,7 +117,7 @@ async function main() {
     throw new Error("No Markdown files found to publish");
   }
 
-  const inputRoot = path.resolve(args.file ? path.dirname(args.file) : args.dir);
+  const inputRoot = args.file ? detectInputRoot(args.file) : path.resolve(args.dir);
   const results = [];
 
   for (const filePath of inputFiles) {
