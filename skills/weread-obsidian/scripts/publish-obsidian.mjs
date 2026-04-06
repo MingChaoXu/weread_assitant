@@ -2,9 +2,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import os from "node:os";
 
 const execFileAsync = promisify(execFile);
 const DEFAULT_INPUT_DIR = "output/obsidian";
+const OBSIDIAN_CLI_PREFS = path.join(os.homedir(), "Library/Application Support/obsidian-cli/preferences.json");
+const OBSIDIAN_APP_PREFS = path.join(os.homedir(), "Library/Application Support/obsidian/obsidian.json");
 
 function parseArgs(argv) {
   const args = {
@@ -83,6 +86,42 @@ function noteNameFromPath(filePath, inputRoot, prefix) {
   return prefix ? `${prefix}/${withoutExt}` : withoutExt;
 }
 
+async function readJsonIfExists(filePath) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+async function resolveVaultPath(vaultName) {
+  const cliPrefs = await readJsonIfExists(OBSIDIAN_CLI_PREFS);
+  const appPrefs = await readJsonIfExists(OBSIDIAN_APP_PREFS);
+  const desiredName = vaultName || cliPrefs?.default_vault_name || "";
+
+  const vaultEntries = Object.values(appPrefs?.vaults || {});
+  const exactMatch = vaultEntries.find((entry) => entry && path.basename(entry.path || "") === desiredName);
+  if (exactMatch?.path) return exactMatch.path;
+
+  if (!vaultName && vaultEntries.length === 1 && vaultEntries[0]?.path) {
+    return vaultEntries[0].path;
+  }
+
+  const fallback = vaultEntries.find((entry) => entry?.open)?.path || vaultEntries[0]?.path;
+  return fallback || "";
+}
+
+async function writeNoteDirectly(noteName, content, vaultPath) {
+  if (!vaultPath) {
+    throw new Error("Could not resolve Obsidian vault path for direct-write fallback");
+  }
+
+  const filePath = path.join(vaultPath, `${noteName}.md`);
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(filePath, content, "utf8");
+  return filePath;
+}
+
 async function publishOne(filePath, inputRoot, { vault, prefix }) {
   const content = await fs.readFile(filePath, "utf8");
   const noteName = noteNameFromPath(filePath, inputRoot, prefix);
@@ -94,15 +133,30 @@ async function publishOne(filePath, inputRoot, { vault, prefix }) {
 
   args.push(noteName);
 
-  const { stdout } = await execFileAsync("obsidian-cli", args, {
-    maxBuffer: 1024 * 1024 * 8,
-  });
+  try {
+    const { stdout } = await execFileAsync("obsidian-cli", args, {
+      maxBuffer: 1024 * 1024 * 8,
+    });
 
-  return {
-    noteName,
-    source: filePath,
-    stdout: (stdout || "").trim(),
-  };
+    return {
+      noteName,
+      source: filePath,
+      mode: "obsidian-cli",
+      stdout: (stdout || "").trim(),
+    };
+  } catch (error) {
+    const vaultPath = await resolveVaultPath(vault);
+    const directPath = await writeNoteDirectly(noteName, content, vaultPath);
+
+    return {
+      noteName,
+      source: filePath,
+      mode: "direct-write",
+      vaultPath: directPath,
+      stdout: error?.stdout?.trim?.() || "",
+      stderr: error?.stderr?.trim?.() || "",
+    };
+  }
 }
 
 async function main() {
@@ -132,6 +186,8 @@ async function main() {
         results: results.map((item) => ({
           noteName: item.noteName,
           source: item.source,
+          mode: item.mode,
+          vaultPath: item.vaultPath || null,
         })),
       },
       null,
