@@ -333,6 +333,10 @@ node scripts/sync-book-by-title.mjs --title "金字塔原理" --vault claw_notes
 node scripts/add-book-reflection.mjs --title "金字塔原理" --reflection "<润色后的文案>" --vault claw_notes
 ```
 
+## License
+
+This project is licensed under `MIT-0` (`MIT No Attribution`). See [LICENSE](/Users/mcxu/workspace/projects/weread_assitant/LICENSE).
+
 ### 工作流 3：完整链路，从微信读书同步到 Obsidian
 
 ```bash

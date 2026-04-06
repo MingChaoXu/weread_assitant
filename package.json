@@ -1,6 +1,7 @@
 {
   "name": "weread-assistant",
   "private": true,
+  "license": "MIT-0",
   "type": "module",
   "scripts": {
     "weread:fetch-shelf": "node scripts/fetch-shelf.mjs",
