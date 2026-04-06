@@ -78,6 +78,33 @@ function normalizeSnippet(value) {
     .trim();
 }
 
+function stripChapterPrefix(value) {
+  return normalizeSnippet(value)
+    .replace(/^\d+(?:\.\d+)+\s*/, "")
+    .replace(/^第[一二三四五六七八九十百零两0-9]+[章节卷篇部]\s*/, "")
+    .replace(/^[上中下]篇\s*/, "")
+    .trim();
+}
+
+function pickIdeaLabel(value, { title = "", max = 16, fallback = "核心观点" } = {}) {
+  const cleaned = stripChapterPrefix(value).replace(title, "").trim();
+  if (!cleaned) return fallback;
+
+  const parts = cleaned
+    .split(/[，。；：！？,.!?:]/)
+    .map((part) => normalizeSnippet(part))
+    .filter(Boolean)
+    .filter((part) => part.length >= 3 && part.length <= 24)
+    .filter((part) => !/已读到|条笔记|时长|公开发|赞 评论|点评此书|推荐一般/.test(part));
+
+  const best = parts.find((part) => part.length >= 4 && part.length <= max) || parts[0] || cleaned;
+  const normalized = normalizeSnippet(best).replace(/^[的地得]/, "");
+
+  if (!normalized) return fallback;
+  if (normalized.length <= max) return normalized;
+  return shorten(normalized, max);
+}
+
 function parseReadingStats(book) {
   const source = [book.metadata?.intro, ...(book.notes || [])].map(cleanLine).join(" ");
   const progress = source.match(/已读到\s*([0-9]{1,3}%)/)?.[1] || "";
@@ -180,9 +207,7 @@ function inferThemes(book, quoteCandidates) {
 
   for (const item of candidates) {
     const cleaned = shorten(
-      normalizeSnippet(item)
-        .replace(/^\d+(?:\.\d+)+\s*/, "")
-        .replace(/^第[一二三四五六七八九十百零两0-9]+[章节卷篇部]\s*/, ""),
+      stripChapterPrefix(item),
       28
     );
     if (!cleaned || cleaned.length < 4) continue;
@@ -198,9 +223,9 @@ function inferThemes(book, quoteCandidates) {
 }
 
 function buildQuestionCards(currentChapter, themes, quoteCandidates) {
-  const themeA = themes[0] || currentChapter || "当前章节";
-  const themeB = themes[1] || "作者观点";
-  const quote = quoteCandidates[0] || "当前摘录";
+  const themeA = pickIdeaLabel(themes[0] || currentChapter, { fallback: "当前章节" });
+  const themeB = pickIdeaLabel(themes[1] || quoteCandidates[0], { fallback: "作者观点" });
+  const quote = shorten(quoteCandidates[0] || "当前摘录", 60);
 
   return [
     `这个章节最想解决的核心问题是什么，作者给出的答案为什么成立？ 线索：${themeA}`,
@@ -209,26 +234,26 @@ function buildQuestionCards(currentChapter, themes, quoteCandidates) {
   ];
 }
 
-function buildPermanentNoteSeeds(themes, quoteCandidates) {
-  const seedA = themes[0] || "核心观点";
-  const seedB = themes[1] || "方法论";
-  const seedC = themes[2] || "应用场景";
+function buildPermanentNoteSeeds({ currentChapter, themes, quoteCandidates, title }) {
+  const seedA = pickIdeaLabel(themes[0] || currentChapter, { title, fallback: "核心原则" });
+  const seedB = pickIdeaLabel(themes[1] || quoteCandidates[0], { title, fallback: "判断方法" });
+  const seedC = pickIdeaLabel(themes[2] || quoteCandidates[1], { title, fallback: "应用场景" });
   const quote = quoteCandidates[0] || "";
 
   return [
     {
-      title: `${seedA}是一条可执行原则`,
-      prompt: `把 ${seedA} 改写成一句脱离原书也能成立的判断，并补上适用边界。`,
+      title: `${seedA}可以作为判断原则`,
+      prompt: `把“${seedA}”改写成一句脱离原书也能成立的判断，并补上适用边界。`,
       support: quote,
     },
     {
-      title: `${seedB}决定了如何做判断`,
-      prompt: `总结 ${seedB} 对判断或决策的影响，再写一个你自己的例子。`,
+      title: `${seedB}会改变决策方式`,
+      prompt: `总结“${seedB}”会如何影响判断或决策，再写一个你自己的例子。`,
       support: quoteCandidates[1] || quote,
     },
     {
-      title: `${seedC}可以迁移到别的场景`,
-      prompt: `把这一点迁移到工作、投资、学习或写作中的一个具体情境。`,
+      title: `${seedC}值得迁移到别的场景`,
+      prompt: `把“${seedC}”迁移到工作、投资、学习或写作中的一个具体情境。`,
       support: quoteCandidates[2] || quote,
     },
   ];
@@ -294,7 +319,12 @@ function buildBookMarkdown(book) {
   const contentLines = uniqueLines((book.content?.blocks || []).map((item) => shorten(item, 800)), 10);
   const themes = inferThemes(book, quoteCandidates);
   const questionCards = buildQuestionCards(currentChapter, themes, quoteCandidates);
-  const permanentNotes = buildPermanentNoteSeeds(themes, quoteCandidates);
+  const permanentNotes = buildPermanentNoteSeeds({
+    currentChapter,
+    themes,
+    quoteCandidates,
+    title,
+  });
   const intro = shorten(metadata.intro || "", 320);
   const yaml = [
     "source: weread",
