@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { DEFAULT_REFLECTION_DIR, reflectionFilePath, slugify } from "./book-utils.mjs";
 
 const DEFAULT_OUTPUT_DIR = "output/obsidian";
 
@@ -33,12 +34,15 @@ async function writeFile(filePath, content) {
   await fs.writeFile(filePath, content, "utf8");
 }
 
-function slugify(input) {
-  return (input || "book")
-    .toLowerCase()
-    .replace(/[^a-z0-9\u4e00-\u9fa5]+/gi, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "book";
+async function readJsonIfExists(filePath, fallback = null) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return fallback;
+    }
+    throw error;
+  }
 }
 
 function fenceYaml(value) {
@@ -301,6 +305,30 @@ function buildPermanentNoteSeeds({ currentChapter, themes, quoteCandidates, titl
   ];
 }
 
+function renderReflectionEntries(reflections) {
+  if (!reflections.length) {
+    return [
+      "> [!tip] 写法建议",
+      "> 可以直接补三行：",
+      "> 1. 这本书最打动我的观点是什么",
+      "> 2. 它改变了我对什么问题的理解",
+      "> 3. 我接下来准备怎么做",
+      "",
+      "- 暂无读后感，可让 OpenClaw 先帮你起草一版再同步回来。",
+    ];
+  }
+
+  return reflections.flatMap((item, index) => [
+    `### 读后感 ${index + 1}`,
+    "",
+    `- 时间：${item.updatedAt || item.createdAt || "未知"}`,
+    `- 风格：${item.mode || "polished"}`,
+    "",
+    item.content || "",
+    "",
+  ]);
+}
+
 function buildShelfMarkdown(shelf) {
   const books = shelf.books || [];
   const lines = books.slice(0, 50).map((book, index) => {
@@ -349,7 +377,7 @@ function buildShelfMarkdown(shelf) {
   ].join("\n");
 }
 
-function buildBookMarkdown(book) {
+function buildBookMarkdown(book, { reflections = [] } = {}) {
   const metadata = book.metadata || {};
   const title = metadata.title || book.page?.title || "Untitled";
   const stats = parseReadingStats(book);
@@ -464,6 +492,10 @@ function buildBookMarkdown(book) {
         ])
       : ["- 暂无永久笔记草稿。", ""]),
     "",
+    "## 读后感与我的卡片",
+    "",
+    ...renderReflectionEntries(reflections),
+    "",
     "## 划线与想法候选",
     "",
     "> [!note] 待清洗原料",
@@ -504,7 +536,8 @@ async function main() {
     const book = await readJson(args.book);
     const title = book.metadata?.title || book.page?.title || "book";
     const bookPath = path.join(args.outputDir, "books", `${slugify(title)}.md`);
-    await writeFile(bookPath, buildBookMarkdown(book));
+    const reflectionData = await readJsonIfExists(reflectionFilePath(title, DEFAULT_REFLECTION_DIR), { entries: [] });
+    await writeFile(bookPath, buildBookMarkdown(book, { reflections: reflectionData?.entries || [] }));
     outputs.push(bookPath);
   }
 

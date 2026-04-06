@@ -23,6 +23,27 @@ Top-level fields:
 - `notes`: note, highlight, bookmark, or review-like blocks visible in DOM
 - `content`: scroll-captured paragraphs and combined markdown-friendly text
 
+## `output/weread/reflections/<slug>.json`
+
+Purpose:
+
+- store user-authored or OpenClaw-polished reflections separately from raw capture
+- survive future `export-obsidian` runs
+- provide a stable append-only history for personal reading thoughts
+
+Top-level fields:
+
+- `title`: resolved book title
+- `slug`: book slug used for file naming
+- `entries`: reflection history
+
+Entry fields:
+
+- `createdAt`: ISO timestamp
+- `updatedAt`: ISO timestamp
+- `mode`: `raw` or `polished`
+- `content`: markdown-friendly reflection prose
+
 ## `output/obsidian/weread-shelf.md`
 
 Purpose:
@@ -38,6 +59,7 @@ Purpose:
 - durable per-book knowledge artifact
 - can be read by Obsidian or any LLM tool
 - includes prompt-ready sections for OpenClaw/Feishu workflows
+- merges any saved reflections into the `读后感与我的卡片` section
 
 Suggested downstream prompt pattern:
 

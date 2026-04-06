@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { evalTarget, infoTarget, scrollTarget, sleep, withNewTarget } from "./cdp-client.mjs";
+import { slugify } from "./book-utils.mjs";
 
 const DEFAULT_OUTPUT_DIR = "output/weread/books";
 
@@ -27,14 +28,6 @@ function parseArgs(argv) {
   }
 
   return args;
-}
-
-function slugify(input) {
-  return (input || "book")
-    .toLowerCase()
-    .replace(/[^a-z0-9\u4e00-\u9fa5]+/gi, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "book";
 }
 
 async function writeJson(filePath, data) {

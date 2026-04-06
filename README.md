@@ -67,6 +67,7 @@
 
 - 卡片笔记：金句卡片、问题卡片、永久笔记草稿
 - 阅读面板：阅读进度、当前章节、本轮待办
+- 读后感回写：把你在聊天里补充的读后感沉淀回对应书籍笔记
 
 ## 目录结构
 
@@ -80,11 +81,14 @@
 ├── references/
 │   └── data-contract.md
 ├── scripts/
+│   ├── add-book-reflection.mjs
+│   ├── book-utils.mjs
 │   ├── cdp-client.mjs
 │   ├── export-obsidian.mjs
 │   ├── fetch-book.mjs
 │   ├── fetch-shelf.mjs
-│   └── publish-obsidian.mjs
+│   ├── publish-obsidian.mjs
+│   └── sync-book-by-title.mjs
 └── output/
     ├── obsidian/
     └── weread/
@@ -109,6 +113,8 @@
 - `node scripts/fetch-book.mjs`
 - `node scripts/export-obsidian.mjs`
 - `node scripts/publish-obsidian.mjs`
+- `node scripts/sync-book-by-title.mjs`
+- `node scripts/add-book-reflection.mjs`
 
 而不是依赖仓库根目录的 `npm run`。根目录的 `package.json` 只是开发时的快捷方式，不是安装后运行的必要条件。
 
@@ -137,6 +143,13 @@ python3 /Users/mcxu/.codex/skills/.system/skill-installer/scripts/install-skill-
 
 ```text
 使用 $weread-obsidian 抓取这本微信读书并生成 Obsidian 卡片笔记
+```
+
+也可以直接用更短的自然语言触发：
+
+```text
+使用 $weread-obsidian 同步《金字塔原理》笔记
+使用 $weread-obsidian 给《金字塔原理》加一段读后感，并润色后同步到 Obsidian
 ```
 
 ## 运行前提
@@ -208,6 +221,41 @@ npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
 - `WeRead/weread-shelf`
 - `WeRead/books/<书名>`
 
+### 5. 按书名一键同步整本笔记
+
+如果你只知道书名，不想先自己翻 `shelf.json` 找链接，可以直接：
+
+```bash
+npm run weread:sync-book-by-title -- --title "金字塔原理" --vault claw_notes
+```
+
+这个命令会自动：
+
+1. 刷新书架快照
+2. 按书名匹配书架中的目标书
+3. 抓取单书页面
+4. 导出 Markdown
+5. 发布到 Obsidian
+
+### 6. 给现有书籍笔记追加读后感
+
+如果你已经同步过某本书，可以把读后感直接写回这本书的 Obsidian 笔记：
+
+```bash
+npm run weread:add-reflection -- \
+  --title "金字塔原理" \
+  --reflection "这本书最有价值的地方，是把表达拆成了结论先行、以上统下、归类分组三个动作。它提醒我，写任何复杂内容前都应该先搭清楚结构。接下来我想把这个方法用到周报和投资笔记里。" \
+  --vault claw_notes
+```
+
+这个命令会：
+
+1. 把读后感保存到 `output/weread/reflections/<slug>.json`
+2. 重新生成这本书的 Markdown
+3. 重新发布对应 Obsidian 笔记
+
+这样后续你再次同步这本书时，读后感不会被覆盖掉。
+
 ## 常见工作流
 
 ### 工作流 1：同步书架，决定下一本读什么
@@ -248,6 +296,41 @@ npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
 
 ```text
 请把这份读书笔记整理成卡片笔记，保留进度面板，挑出 3 条最值得保留的金句，回答 2 个问题卡片，并完成 2 条永久笔记。
+```
+
+### 工作流 2.5：通过聊天按书名同步
+
+这适合你在 OpenClaw 里直接说一句话，不想手动找书籍 URL。
+
+推荐触发语句：
+
+```text
+使用 $weread-obsidian 同步《金字塔原理》笔记
+```
+
+skill 内部应优先执行：
+
+```bash
+node scripts/sync-book-by-title.mjs --title "金字塔原理" --vault claw_notes
+```
+
+### 工作流 2.6：通过聊天补读后感并回写
+
+这适合你已经有粗糙想法，希望 OpenClaw 先整理文案，再把结果写回对应书籍笔记。
+
+推荐触发语句：
+
+```text
+使用 $weread-obsidian 给《金字塔原理》加一段读后感，并润色后同步到 Obsidian：这本书让我意识到，表达问题很多时候不是不会写，而是没有先搭结构。
+```
+
+推荐执行策略：
+
+1. 先把用户原话润色成 1 到 3 段自然、克制、可回顾的读后感
+2. 再执行：
+
+```bash
+node scripts/add-book-reflection.mjs --title "金字塔原理" --reflection "<润色后的文案>" --vault claw_notes
 ```
 
 ### 工作流 3：完整链路，从微信读书同步到 Obsidian
