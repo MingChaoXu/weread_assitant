@@ -86,16 +86,58 @@ function stripChapterPrefix(value) {
     .trim();
 }
 
+function extractPhraseCandidates(value, { title = "" } = {}) {
+  const cleaned = stripChapterPrefix(value).replace(title, "").trim();
+  if (!cleaned) return [];
+
+  const candidates = [];
+  const push = (item) => {
+    const normalized = normalizeSnippet(item);
+    if (!normalized) return;
+    if (normalized.length < 2 || normalized.length > 18) return;
+    if (/已读到|条笔记|时长|公开发|赞 评论|点评此书|推荐一般/.test(normalized)) return;
+    if (!candidates.includes(normalized)) candidates.push(normalized);
+  };
+
+  if (cleaned.includes("趋势") && cleaned.includes("盘整")) push("趋势与盘整");
+  if (cleaned.includes("级别") && cleaned.includes("判断")) push("同级别判断");
+  if (cleaned.includes("假设条件")) push("假设条件");
+  if (cleaned.includes("中枢")) push("中枢");
+  if (cleaned.includes("背驰")) push("背驰");
+  if (cleaned.includes("买卖点")) push("买卖点");
+  if (cleaned.includes("陷阱式") || cleaned.includes("反转式") || cleaned.includes("中继式")) push("模式分类");
+
+  for (const segment of cleaned.split(/[，。；：！？,.!?\n■]/)) {
+    const part = normalizeSnippet(segment);
+    if (!part) continue;
+
+    const directMatches = part.match(/[\u4e00-\u9fa5]{3,12}/g) || [];
+    directMatches.forEach(push);
+
+    const howMatch = part.match(/如何([\u4e00-\u9fa5]{2,10})/);
+    if (howMatch) push(howMatch[1]);
+
+    const judgmentMatch = part.match(/([\u4e00-\u9fa5]{2,8})判断/);
+    if (judgmentMatch) push(`${judgmentMatch[1]}判断`);
+  }
+
+  return candidates;
+}
+
 function pickIdeaLabel(value, { title = "", max = 16, fallback = "核心观点" } = {}) {
   const cleaned = stripChapterPrefix(value).replace(title, "").trim();
   if (!cleaned) return fallback;
 
-  const parts = cleaned
-    .split(/[，。；：！？,.!?:]/)
-    .map((part) => normalizeSnippet(part))
-    .filter(Boolean)
-    .filter((part) => part.length >= 3 && part.length <= 24)
-    .filter((part) => !/已读到|条笔记|时长|公开发|赞 评论|点评此书|推荐一般/.test(part));
+  const phraseCandidates = extractPhraseCandidates(cleaned, { title }).filter((part) => part.length >= 3);
+  const parts = [
+    ...phraseCandidates,
+    ...cleaned
+      .split(/[，。；：！？,.!?:]/)
+      .map((part) => normalizeSnippet(part))
+      .filter(Boolean)
+      .filter((part) => part.length >= 3 && part.length <= 24)
+      .filter((part) => !/已读到|条笔记|时长|公开发|赞 评论|点评此书|推荐一般/.test(part)),
+  ];
 
   const best = parts.find((part) => part.length >= 4 && part.length <= max) || parts[0] || cleaned;
   const normalized = normalizeSnippet(best).replace(/^[的地得]/, "");
@@ -235,25 +277,25 @@ function buildQuestionCards(currentChapter, themes, quoteCandidates) {
 }
 
 function buildPermanentNoteSeeds({ currentChapter, themes, quoteCandidates, title }) {
-  const seedA = pickIdeaLabel(themes[0] || currentChapter, { title, fallback: "核心原则" });
-  const seedB = pickIdeaLabel(themes[1] || quoteCandidates[0], { title, fallback: "判断方法" });
-  const seedC = pickIdeaLabel(themes[2] || quoteCandidates[1], { title, fallback: "应用场景" });
+  const chapterLabel = pickIdeaLabel(currentChapter || themes[0], { title, fallback: "核心原则" });
+  const conceptA = pickIdeaLabel(quoteCandidates[0] || themes[1], { title, fallback: chapterLabel });
+  const conceptB = pickIdeaLabel(quoteCandidates[1] || themes[2] || quoteCandidates[0], { title, fallback: "模式分类" });
   const quote = quoteCandidates[0] || "";
 
   return [
     {
-      title: `${seedA}可以作为判断原则`,
-      prompt: `把“${seedA}”改写成一句脱离原书也能成立的判断，并补上适用边界。`,
+      title: `${chapterLabel}可以作为判断原则`,
+      prompt: `把“${chapterLabel}”改写成一句脱离原书也能成立的判断，并补上适用边界。`,
       support: quote,
     },
     {
-      title: `${seedB}会改变决策方式`,
-      prompt: `总结“${seedB}”会如何影响判断或决策，再写一个你自己的例子。`,
+      title: `判断${conceptA}前要先明确边界`,
+      prompt: `解释为什么判断“${conceptA}”前要先明确边界，再补一个容易误判的例子。`,
       support: quoteCandidates[1] || quote,
     },
     {
-      title: `${seedC}值得迁移到别的场景`,
-      prompt: `把“${seedC}”迁移到工作、投资、学习或写作中的一个具体情境。`,
+      title: `${conceptB}可以迁移到别的场景`,
+      prompt: `把“${conceptB}”迁移到工作、投资、学习或写作中的一个具体情境。`,
       support: quoteCandidates[2] || quote,
     },
   ];
