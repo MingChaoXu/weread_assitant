@@ -159,6 +159,64 @@ npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
 - `WeRead/weread-shelf`
 - `WeRead/books/<书名>`
 
+## 常见工作流
+
+### 工作流 1：同步书架，决定下一本读什么
+
+适合你刚打开微信读书，想让 OpenClaw 先帮你做阅读决策的时候。
+
+```bash
+npm run weread:fetch-shelf
+npm run weread:export-obsidian -- --shelf output/weread/shelf.json
+npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
+```
+
+然后在 Obsidian 或 OpenClaw 中读取：
+
+- `WeRead/weread-shelf`
+
+推荐提问：
+
+```text
+请基于我的微信读书书架，推荐下一本最值得深读的书，并说明理由、预期收获和建议的阅读顺序。
+```
+
+### 工作流 2：同步单本书，生成卡片笔记底稿
+
+适合你已经在读某本书，想把当前进度和正文片段转成可写的卡片笔记。
+
+```bash
+npm run weread:fetch-book -- --book-url "https://weread.qq.com/web/reader/<bookId>"
+npm run weread:export-obsidian -- --book "output/weread/books/<slug>.json"
+npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
+```
+
+然后在 Obsidian 或 OpenClaw 中读取：
+
+- `WeRead/books/<书名>`
+
+推荐提问：
+
+```text
+请把这份读书笔记整理成卡片笔记，保留进度面板，挑出 3 条最值得保留的金句，回答 2 个问题卡片，并完成 2 条永久笔记。
+```
+
+### 工作流 3：完整链路，从微信读书同步到 Obsidian
+
+```bash
+npm run weread:fetch-shelf
+npm run weread:fetch-book -- --book-url "https://weread.qq.com/web/reader/<bookId>"
+npm run weread:export-obsidian -- \
+  --shelf output/weread/shelf.json \
+  --book "output/weread/books/<slug>.json"
+npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
+```
+
+这个流程会同时更新：
+
+- 书架总览 note
+- 单书卡片笔记 note
+
 ## 可用命令
 
 ### `npm run weread:fetch-shelf`
@@ -277,6 +335,54 @@ npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
 ### 6. 待清洗原料
 
 保留抓取到的原始划线/想法候选，方便后续二次清洗。
+
+## OpenClaw 使用建议
+
+推荐把这个仓库视为“同步层”，把 Obsidian 视为“知识基座”，把 OpenClaw 视为“整理与对话层”。
+
+### 推荐职责划分
+
+- WeRead Assistant：负责抓取与导出
+- Obsidian：负责沉淀与回看
+- OpenClaw：负责提炼、提问、改写、连接旧笔记
+
+### 推荐对话顺序
+
+1. 先同步 WeRead 数据到本地
+2. 再发布到 Obsidian
+3. 最后让 OpenClaw 基于 Obsidian note 继续整理
+
+这样做的好处是：
+
+- 避免每次对话都重新连接微信读书
+- 保留可复用的 Markdown 中间层
+- 便于后续迭代模板和提示词
+
+### 建议保留的 Prompt 模板
+
+#### 模板 1：章节总结
+
+```text
+请基于这份微信读书笔记，先更新读书进度面板，再总结当前章节的核心观点、论证方式和最值得记住的结论。
+```
+
+#### 模板 2：卡片提炼
+
+```text
+请从这份笔记中挑出最值得保留的 3 条金句，分别补上“我的理解”“可连接的旧笔记”“可指导的行动”。
+```
+
+#### 模板 3：永久笔记加工
+
+```text
+请把这份笔记中的永久笔记草稿改写成更像人写的标题，并补全论点、例子和可链接的旧笔记方向。
+```
+
+#### 模板 4：追问式阅读
+
+```text
+请基于问题卡片继续追问，挑 2 个最关键的问题展开，指出我下一次阅读时应该重点验证什么。
+```
 
 ## 已完成的真实测试
 
