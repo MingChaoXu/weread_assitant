@@ -55,11 +55,11 @@ This writes notes into the default vault configured in `obsidian-cli`, or the va
 
 ## Installability
 
-This skill is designed to be installed directly from the repository path `skills/weread-obsidian`.
+This repository is structured as a self-contained skill repo.
 
-- The skill is self-contained under this directory.
+- Install the repository root as the skill source.
 - Runtime commands should call files in `scripts/` directly.
-- The repo-root `package.json` only provides local developer aliases and is not required after installation.
+- The repo-root `package.json` only provides local developer aliases and is not required by the skill logic itself.
 
 ## Operating guidance
 

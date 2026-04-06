@@ -73,18 +73,18 @@
 ```text
 .
 ├── README.md
+├── SKILL.md
+├── agents/
+│   └── openai.yaml
 ├── package.json
-├── skills/
-│   └── weread-obsidian/
-│       ├── SKILL.md
-│       ├── references/
-│       │   └── data-contract.md
-│       └── scripts/
-│           ├── cdp-client.mjs
-│           ├── export-obsidian.mjs
-│           ├── fetch-book.mjs
-│           ├── fetch-shelf.mjs
-│           └── publish-obsidian.mjs
+├── references/
+│   └── data-contract.md
+├── scripts/
+│   ├── cdp-client.mjs
+│   ├── export-obsidian.mjs
+│   ├── fetch-book.mjs
+│   ├── fetch-shelf.mjs
+│   └── publish-obsidian.mjs
 └── output/
     ├── obsidian/
     └── weread/
@@ -92,11 +92,11 @@
 
 ## 作为 OpenClaw Skill 安装
 
-如果你的目标不是只在这个仓库里开发，而是让 OpenClaw 直接安装这个 skill，那么应该安装仓库里的这个子路径：
+这个仓库现在本身就是一个 skill repo。
 
-- `skills/weread-obsidian`
+也就是说，OpenClaw 安装时应该直接安装仓库根，而不是再指向子路径。
 
-原因是这个目录已经包含了 skill 需要的核心内容：
+仓库根已经包含 skill 需要的核心内容：
 
 - `SKILL.md`
 - `scripts/`
@@ -114,20 +114,14 @@
 
 ### 从 GitHub 直接安装
 
-如果你已经把这个仓库推到 GitHub，可以直接按 skill 子路径安装：
+如果你已经把这个仓库推到 GitHub，推荐直接使用仓库根 URL 安装：
 
 ```bash
 python3 /Users/mcxu/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo MingChaoXu/weread_assitant \
-  --path skills/weread-obsidian
+  --url https://github.com/MingChaoXu/weread_assitant/tree/main
 ```
 
-也可以使用仓库 URL 方式：
-
-```bash
-python3 /Users/mcxu/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --url https://github.com/MingChaoXu/weread_assitant/tree/main/skills/weread-obsidian
-```
+之所以推荐 URL 方式，是因为这个仓库的 skill 就在根目录，而不是某个子路径。
 
 安装完成后，重启 OpenClaw/Codex 以加载新 skill。
 
@@ -314,7 +308,7 @@ npm run weread:publish-obsidian -- --dir output/obsidian --vault claw_notes
 
 更细的数据契约见：
 
-- `skills/weread-obsidian/references/data-contract.md`
+- `references/data-contract.md`
 
 核心产物如下。
 
