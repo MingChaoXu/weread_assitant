@@ -112,6 +112,39 @@
 
 而不是依赖仓库根目录的 `npm run`。根目录的 `package.json` 只是开发时的快捷方式，不是安装后运行的必要条件。
 
+### 从 GitHub 直接安装
+
+如果你已经把这个仓库推到 GitHub，可以直接按 skill 子路径安装：
+
+```bash
+python3 /Users/mcxu/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo MingChaoXu/weread_assitant \
+  --path skills/weread-obsidian
+```
+
+也可以使用仓库 URL 方式：
+
+```bash
+python3 /Users/mcxu/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --url https://github.com/MingChaoXu/weread_assitant/tree/main/skills/weread-obsidian
+```
+
+安装完成后，重启 OpenClaw/Codex 以加载新 skill。
+
+### 安装后的触发方式
+
+推荐直接按 skill 名称调用：
+
+```text
+使用 $weread-obsidian 同步我的微信读书书架
+```
+
+或者：
+
+```text
+使用 $weread-obsidian 抓取这本微信读书并生成 Obsidian 卡片笔记
+```
+
 ## 运行前提
 
 ### 必需条件
