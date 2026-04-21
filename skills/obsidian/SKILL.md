@@ -24,6 +24,7 @@ Use this skill whenever the user wants to read, search, create, organize, or upd
 - Encourages durable note structure: frontmatter, headings, tags, and wikilinks
 - Reuses the note-publishing pattern established by `weread-obsidian`: generate locally first, then publish into the vault
 - Provides fixed-section update rules, merge strategies, and reusable templates for AI-generated notes
+- Can act as the publish-and-polish layer for external generators such as the Douyin knowledge assistant
 
 ## Vault location
 
@@ -295,6 +296,21 @@ tags:
 ## Related Notes
 - [[{{related_note}}]]
 ```
+
+### Douyin knowledge-base publishing convention
+
+If the source workflow is the Douyin knowledge assistant, prefer these final vault locations:
+
+- Note path: `抖音知识库/{{author_slug}}/{{video_slug}}.md`
+- Asset path: `抖音知识库/附件/{{author_slug}}/{{video_slug}}/`
+
+The external generator should provide a draft note plus asset manifest. This skill should then:
+
+1. polish the draft note into vault-ready Markdown
+2. add/merge frontmatter, tags, and title formatting
+3. copy screenshots or keyframes into the dedicated attachments folder
+4. rewrite note references to the final vault asset paths
+5. preserve the user's reflection block during republishes
 
 ### Update policy for video notes
 
