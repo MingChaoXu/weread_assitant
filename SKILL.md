@@ -111,3 +111,12 @@ This repository is structured as a self-contained skill repo.
 - If `obsidian-cli` is available, publish the generated Markdown into the vault and let OpenClaw continue working from vault notes instead of raw export files.
 - Feishu or OpenClaw can read the generated Markdown or JSON and turn it into prompts, summaries, or reading-note conversations.
 - The recommended pattern is: sync data locally first, then let the downstream agent reason over files instead of talking to WeRead live on every request.
+
+## Relationship to the general `obsidian` skill
+
+- This skill is the specialized WeRead-to-Obsidian pipeline.
+- Use the general `obsidian` skill for vault-native operations such as searching notes, patching existing Markdown, creating standalone notes, or appending structured reflections outside the WeRead sync flow.
+- Prefer this split of responsibility:
+  - `weread-obsidian`: fetch shelf/book state, export note-ready Markdown, preserve WeRead-specific reflections, publish synced reading notes
+  - `obsidian`: perform general vault maintenance, safe note edits, note deduplication, and post-processing after publish
+- When a synced WeRead note needs follow-up AI refinement, keep the local-first pattern: regenerate locally, preserve the reflection section, then publish the finalized Markdown back into the vault.
